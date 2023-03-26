@@ -2,6 +2,7 @@
 
 select 
 --identifiers
+    {{dbt_utils.surrogate_key(['vendorid', 'tpep_pickup_datetime' ])}} as tripid,
     cast(vendorid as integer) as vendorid,
     cast(ratecodeid as integer) as ratecodeid,
     cast(pulocationid as integer) as pulocationid,
@@ -23,7 +24,15 @@ select
     cast(tolls_amount as numeric) as tolls_amount,
     cast(improvement_surcharge as numeric) as improvement_surcharge,
     cast(total_amount as numeric) as total_amount,
-    cast(congestion_surcharge as numeric) as congestion_surcharge
+    cast(congestion_surcharge as numeric) as congestion_surcharge,
+    cast(payment_type as numeric) as payment_type,
+    {{get_payment_type_description('payment_type')}} as payment_type_description
 
  from {{source('staging','rides')}}
+ where vendorid is not null
+
+ --dbt build --m <model.sql> --var 'is_test_run: false'
+{% if var('is_test_run', default=true) %}
 limit 100
+
+{% endif %}
